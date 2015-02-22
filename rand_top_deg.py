@@ -40,7 +40,7 @@ deg_centrality = nx.degree_centrality(G)
 deg_centrality_sorted = sortDictKeys(deg_centrality)
 top_deg = deg_centrality_sorted[1:min(2*num_seeds, num_nodes)]
 
-out_filename = fn_parts[0] + '.' + fn_parts[1] + '.' + fn_parts[2] + '_sub'
+out_filename = fn_parts[0] + '.' + fn_parts[1] + '.' + fn_parts[2] + '_topdeg_sub'
 with open(out_filename, 'w') as out_file:
     for i in range(50):
         round = [top_deg[i] for i in sorted(random.sample(xrange(len(top_deg)), num_seeds))]
