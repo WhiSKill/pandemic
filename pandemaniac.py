@@ -9,8 +9,8 @@ def sortDictKeys(dict):
     return sorted(dict.keys(), key=lambda k: dict[k], reverse=True)
 
 
-if len(sys.argv) != 3:
-    print "Usage: python %s INPUT_GRAPH OUT_FILE" % sys.argv[0]
+if len(sys.argv) != 2:
+    print "Usage: python %s INPUT_GRAPH" % sys.argv[0]
     sys.exit(1)
 
 # get constants from filename
@@ -33,29 +33,41 @@ G = nx.from_dict_of_lists(graph_json)
 G.remove_nodes_from(nx.isolates(G))
 num_nodes = nx.number_of_nodes(G)
 
-print "Num Nodes: " + str(num_nodes)
-
+print "Nodes: " + str(num_nodes)
+print "Seeds: " + str(num_seeds)
+# get degree centrality of all nodes and sort by key
 deg_centrality = nx.degree_centrality(G)
 deg_centrality_sorted = sortDictKeys(deg_centrality)
 top_deg = deg_centrality_sorted[1:min(3*num_seeds, num_nodes)]
 
+# get core number of nodes
+core_num = nx.core_number(G)
+core_num_sorted = sortDictKeys(core_num)
+max_core = core_num[core_num_sorted[1]]
+kcore_nodes = nx.nodes(nx.k_core(G, k=max_core-1, core_number=core_num))
+print "Max Core: " + str(max_core)
 
+# get betweeness centrality and sort by key
 if num_nodes < 750:
     btwn_centrality = nx.betweenness_centrality(G)
 else:
     btwn_centrality = nx.betweenness_centrality(G, 750)
 btwn_sorted = sorted(btwn_centrality.keys(), key=lambda k: btwn_centrality[k], reverse=True)
+top_btwn = btwn_sorted[1:min(3*num_seeds, num_nodes)]
 
-top_btwn = btwn_sorted[1:min(2*num_seeds, num_nodes)]
-
+# select nodes that are in all top lists
 best_nodes = []
-for node_id in top_deg:
-    if node_id in top_btwn:
+for node_id in top_btwn:
+    if node_id in top_deg or node_id in kcore_nodes:
         best_nodes.append(node_id)
 
-with open(sys.argv[2], 'w') as out_file:
-    for i in range(num_seeds*50):
-        out_file.write(random.choice(best_nodes) + '\n')
+print len(best_nodes)
+out_filename = fn_parts[0] + '.' + fn_parts[1] + '.' + fn_parts[2] + '_sub'
+with open(out_filename, 'w') as out_file:
+    for i in range(50):
+        round = [best_nodes[i] for i in sorted(random.sample(xrange(len(best_nodes)), num_seeds))]
+        for node in round:
+            out_file.write(node + '\n')
 
 
 """
