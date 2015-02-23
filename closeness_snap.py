@@ -24,37 +24,72 @@ num_players = int(fn_parts[0])
 num_seeds = int(fn_parts[1])
 
 # init graph
-G = snap.TUNGraph.New()
+G_snap = snap.TUNGraph.New()
 graph_json = {}
 with open(sys.argv[1], 'r') as in_file:
     graph_json = json.load(in_file)
 # setup SNAP graph object
 for id_str in graph_json.keys():
     n_id = int(id_str)
-    if not G.IsNode(n_id):
-        G.AddNode(n_id)
+    if not G_snap.IsNode(n_id):
+        G_snap.AddNode(n_id)
     for neighbor_id_str in graph_json[id_str]:
         neighbor_id = int(neighbor_id_str)
-        if not G.IsNode(neighbor_id):
-            G.AddNode(neighbor_id)
-        G.AddEdge(n_id, neighbor_id)
+        if not G_snap.IsNode(neighbor_id):
+            G_snap.AddNode(neighbor_id)
+        G_snap.AddEdge(n_id, neighbor_id)
 
 # print basic info
-snap.PrintInfo(G, "Python type TUNGraph")
+snap.PrintInfo(G_snap, "Python type TUNGraph")
 
 # get closeness centrality of all nodes
 closeness_dict = {}
 closeness_ht = snap.TIntFltH() # SNAP hash table
 start_time = timeit.default_timer()
-for node in G.Nodes():
-    closeness_ht.AddDat(node.GetId(), snap.GetClosenessCentr(G, node.GetId()))
-    closeness_dict[node.GetId()] = snap.GetClosenessCentr(G, node.GetId())
+for node in G_snap.Nodes():
+    closeness_ht.AddDat(node.GetId(), snap.GetClosenessCentr(G_snap, node.GetId()))
+    closeness_dict[node.GetId()] = snap.GetClosenessCentr(G_snap, node.GetId())
 elapsed = timeit.default_timer() - start_time
 print elapsed
 
 sorted_closeness = sortDictKeys(closeness_dict)
+top_closeness = sorted_closeness[1 : (2*num_seeds)]
+
+#print "Number of best choices: " + str(len(top_btwn))
+out_filename = fn_parts[0] + '.' + fn_parts[1] + '.' + fn_parts[2] + '_closeness_sub'
+with open(out_filename, 'w') as out_file:
+    for i in range(50):
+        round = [top_closeness[i] for i in sorted(random.sample(xrange(len(top_closeness)), num_seeds))]
+        for node in round:
+            out_file.write(str(node) + '\n')
 
 
+
+"""
+top_closeness_vec = snap.TIntV()
+for id in top_closeness:
+    top_closeness_vec.Add(id)
+
+# create neighbor vector
+neighbors_vec = snap.TIntV()
+
+top_n_closeness = 5
+# iterate over all top closeness nodes to get neighbors
+for i in range(top_n_closeness):
+    curr_node_id = top_closeness[i]
+    for node_id in top_closeness[i+1 : top_n_closeness]:
+        # get common neighbors
+        curr_vec = snap.TIntV()
+        snap.GetCmnNbrs(G_snap, curr_node_id, node_id, curr_vec)
+        neighbors_vec.Union(curr_vec)
+# make vector of id's a set
+neighbors_vec.Merge()
+# get all neighbors that are not in top closeness
+neighbors_vec.Diff(top_closeness_vec)
+for id in neighbors_vec:
+    print id
+
+"""
 
 """
 for node in closeness:
@@ -115,11 +150,4 @@ btwn_sorted = sorted(btwn_centrality.keys(), key=lambda k: btwn_centrality[k], r
 top_btwn = btwn_sorted[1:min(2*num_seeds, num_nodes)]
 
 
-print "Number of best choices: " + str(len(top_btwn))
-out_filename = fn_parts[0] + '.' + fn_parts[1] + '.' + fn_parts[2] + '_btwn_sub'
-with open(out_filename, 'w') as out_file:
-    for i in range(50):
-        round = [top_btwn[i] for i in sorted(random.sample(xrange(len(top_btwn)), num_seeds))]
-        for node in round:
-            out_file.write(node + '\n')
 """
