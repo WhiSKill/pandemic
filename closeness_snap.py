@@ -4,6 +4,7 @@ import sys
 import json
 import random
 import snap
+import timeit
 
 # input a dict; output keys sorted in descending order
 def sortDictKeys(dict):
@@ -28,19 +29,30 @@ graph_json = {}
 with open(sys.argv[1], 'r') as in_file:
     graph_json = json.load(in_file)
 # setup SNAP graph object
-for node_id in graph_json.keys():
-    n_id = int(node_id)
+for id_str in graph_json.keys():
+    n_id = int(id_str)
     if not G.IsNode(n_id):
         G.AddNode(n_id)
-    for neighbor in graph_json[node_id]:
-        neighbor_id = int(neighbor)
+    for neighbor_id_str in graph_json[id_str]:
+        neighbor_id = int(neighbor_id_str)
         if not G.IsNode(neighbor_id):
             G.AddNode(neighbor_id)
         G.AddEdge(n_id, neighbor_id)
 
-closeness = snap.TIntFltH()
+# print basic info
+snap.PrintInfo(G, "Python type TUNGraph")
+
+# get closeness centrality of all nodes
+closeness_dict = {}
+closeness_ht = snap.TIntFltH() # SNAP hash table
+start_time = timeit.default_timer()
 for node in G.Nodes():
-    closeness.AddDat(node.GetId(), snap.GetClosenessCentr(G, node.GetId()))
+    closeness_ht.AddDat(node.GetId(), snap.GetClosenessCentr(G, node.GetId()))
+    closeness_dict[node.GetId()] = snap.GetClosenessCentr(G, node.GetId())
+elapsed = timeit.default_timer() - start_time
+print elapsed
+
+sorted_closeness = sortDictKeys(closeness_dict)
 
 
 
