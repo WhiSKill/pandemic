@@ -3,8 +3,8 @@ import os
 import sim
 import json
 import pprint
+from CONFIG import NUM_GAMES
 
-NUM_GAMES = 50
 pp = pprint.PrettyPrinter(indent=1)
 
 def main(argv):
@@ -65,12 +65,11 @@ def main(argv):
             players[player_name] = player_seeds
 
     # Print out the results
-    print "===========PLAYERS==========="
-    pp.pprint(players)
-    print
     print "===========RESULTS==========="
-    result = sim.run(graph, players, NUM_GAMES)
-    pp.pprint(result)
+    results = sim.run(graph, players, NUM_GAMES)
+    #pp.pprint(results)
+    for result in results:
+        print result[0]
 
 if __name__ == "__main__":
     main(sys.argv)
