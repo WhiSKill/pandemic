@@ -10,7 +10,7 @@ import comm
 import math
 from CONFIG import NUM_GAMES
 
-SUFFIX = "_part"
+SUFFIX = "_part2"
 
 def main(argv):
 
